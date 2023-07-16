@@ -13,7 +13,7 @@ class AuthController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string',
-            'email' => 'required|string|email|unique:users,email ',
+            'email' => 'required|email|string|unique:users,email',
             'password' => [
                 'required',
                 'confirmed',
@@ -27,7 +27,7 @@ class AuthController extends Controller
             'password' => bcrypt($data['password'])
         ]);
 
-        $token = $user->createToken('main')->planeTextToken;
+        $token = $user->createToken('main')->plainTextToken;
 
         return response([
             'user' => $user,
@@ -35,27 +35,40 @@ class AuthController extends Controller
         ]);
     }
 
-    public function login(Request $request) {
+    public function login(Request $request)
+    {
         $credentials = $request->validate([
-            'email' => 'required, email, string, exists:user,email',
+            'email' => 'required|email|string|exists:users,email',
             'password' => [
-                'required'
+                'required',
             ],
             'remember' => 'boolean'
         ]);
         $remember = $credentials['remember'] ?? false;
         unset($credentials['remember']);
-        if(!Auth::attempt($credentials, $remember)) {
+        if (!Auth::attempt($credentials, $remember)) {
             return response([
                 'error' => 'The Provided credentials are not correct'
-            ], status: 422);
+            ], 422);
         }
         $user = Auth::user();
-        $token = $user->createToken('main')->plainTextToken();
+        $token = $user->createToken('main')->plainTextToken;
 
         return response([
             'user' => $user,
             'token' => $token
+        ]);
+    }
+
+    /** @var User $user */
+    public function logout()
+    {
+        $user = Auth::user();
+        //Revoke the token that has used to authenticate the current request
+        $user->currentAccessToken()->delete();
+
+        return response([
+            'success' => true
         ]);
     }
 }
