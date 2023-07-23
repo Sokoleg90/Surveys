@@ -60,6 +60,7 @@ class AuthController extends Controller
         ]);
     }
 
+
     /** @var User $user */
     public function logout()
     {
